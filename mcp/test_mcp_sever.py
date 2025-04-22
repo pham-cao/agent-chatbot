@@ -3,7 +3,7 @@ from mcp.client.sse import sse_client
 
 
 async def check():
-    async with sse_client("http://0.0.0.0:8000/sse") as streams:
+    async with sse_client("http://0.0.0.0:5000/sse") as streams:
         async with ClientSession(*streams) as session:
             await session.initialize()
 
