@@ -1,6 +1,6 @@
 from mcp.server.fastmcp import FastMCP
-from RAG.QdrantProcess import ProcessVectorDB
-from RAG.Generator import Generator
+from rag.QdrantProcess import ProcessVectorDB
+from rag.Generator import Generator
 
 db = ProcessVectorDB()
 mcp = FastMCP(name="mcp-sever")

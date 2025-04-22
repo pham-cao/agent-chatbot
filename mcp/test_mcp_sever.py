@@ -10,6 +10,8 @@ async def check():
             # List avail tool
             tools = await session.list_tools()
 
+            print(tools)
+
             # Call add tool
             result = await session.call_tool("get_all_collections")
             print(result)

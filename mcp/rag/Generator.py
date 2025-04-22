@@ -1,6 +1,6 @@
 from langchain_core.prompts import ChatPromptTemplate
-from RAG.QdrantProcess import DB_CLIENT
-from RAG.LLMs import doc_embeddings_model, llm
+from rag.QdrantProcess import DB_CLIENT
+from rag.LLMs import doc_embeddings_model, llm
 from langchain_qdrant import QdrantVectorStore
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain

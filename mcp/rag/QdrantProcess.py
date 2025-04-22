@@ -1,7 +1,7 @@
 from qdrant_client import QdrantClient
 from decouple import config
 from qdrant_client.models import VectorParams, Distance
-from RAG.LLMs import doc_embeddings_model
+from rag.LLMs import doc_embeddings_model
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_qdrant import QdrantVectorStore
 

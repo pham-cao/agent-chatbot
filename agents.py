@@ -13,7 +13,7 @@ def get_capital_city(country: str) -> str:
     return capitals.get(country.lower(), f"Sorry, I don't know the capital of {country}.")
 
 
-# Add the tool to the agent
+# Add the tool to the agent.py
 capital_agent = LlmAgent(
     model="gemini-2.0-flash",
     name="capital_agent",
@@ -44,13 +44,13 @@ session = session_service.create_session(
 print(f"Session created: App='{APP_NAME}', User='{USER_ID}', Session='{SESSION_ID}'")
 
 # --- Runner ---
-# Key Concept: Runner orchestrates the agent execution loop.
+# Key Concept: Runner orchestrates the agent.py execution loop.
 runner = Runner(
-    agent=capital_agent, # The agent we want to run
+    agent=capital_agent, # The agent.py we want to run
     app_name=APP_NAME,   # Associates runs with our app
     session_service=session_service # Uses our session manager
 )
-print(f"Runner created for agent '{runner.agent.name}'.")
+print(f"Runner created for agent.py '{runner.agent.name}'.")
 
 
 # @title Define Agent Interaction Function
@@ -58,7 +58,7 @@ import asyncio
 from google.genai import types # For creating message Content/Parts
 
 async def call_agent_async(query: str):
-  """Sends a query to the agent and prints the final response."""
+  """Sends a query to the agent.py and prints the final response."""
   print(f"\n>>> User Query: {query}")
 
   # Prepare the user's message in ADK format
@@ -66,7 +66,7 @@ async def call_agent_async(query: str):
 
   final_response_text = "Agent did not produce a final response." # Default
 
-  # Key Concept: run_async executes the agent logic and yields Events.
+  # Key Concept: run_async executes the agent.py logic and yields Events.
   # We iterate through events to find the final answer.
   async for event in runner.run_async(user_id=USER_ID, session_id=SESSION_ID, new_message=content):
       # You can uncomment the line below to see *all* events during execution
