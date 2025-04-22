@@ -8,7 +8,7 @@ from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService # Optional
 from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, SseServerParams, StdioServerParameters
 
-load_dotenv('../.env')
+load_dotenv()
 
 async def get_tools_async():
 
