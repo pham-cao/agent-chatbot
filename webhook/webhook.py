@@ -1,7 +1,7 @@
 from flask import Flask, request
 import requests
 app = Flask(__name__)
-
+from agent.multi_tool_agent.agent import async_main
 VERIFY_TOKEN = "my_secret_token"
 
 @app.route("/", methods=["GET"])
@@ -26,7 +26,7 @@ def send_message(recipient_id, message_text):
     response = requests.post(url, headers=headers, json=payload, params=params)
     print("📤 Sent message:", response.json())
 @app.route("/", methods=["POST"])
-def webhook():
+async def webhook():
     data = request.get_json()
     print("🔔 Received webhook event:")
     print(data)
@@ -34,13 +34,18 @@ def webhook():
     for entry in data.get("entry", []):
         for event in entry.get("messaging", []):
             sender_id = event["sender"]["id"]
+
+            print("------------------------------",sender_id)
+
             if "message" in event:
                 text = event["message"].get("text")
                 if text:
                     reply = f"Bạn vừa nói: {text}"
+                    reply = await async_main(text)
+                    print(reply)
                     send_message(sender_id, reply)
 
     return "ok", 200
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(port=5555)

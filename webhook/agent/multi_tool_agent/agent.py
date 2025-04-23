@@ -1,79 +1,74 @@
-# agent.py (modify get_tools_async and other parts as needed)
 import asyncio
 from dotenv import load_dotenv
 from google.genai import types
 from google.adk.agents.llm_agent import LlmAgent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
-from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService # Optional
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, SseServerParams, StdioServerParameters
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, SseServerParams
+from google.adk.memory import InMemoryMemoryService
 
 load_dotenv()
+session_service = InMemorySessionService()
+session = session_service.create_session(
+    state={}, app_name='mcp_maps_app', user_id='7322592037816816'
+)
+memory_service = InMemoryMemoryService()
+
 
 async def get_tools_async():
+    tools, exit_stack = await MCPToolset.from_server(
+        connection_params=SseServerParams(url="http://0.0.0.0:5000/sse",
+                                          headers={"Content-Type": "application/json"})
+    )
+    print("MCP Toolset created successfully.")
+    return tools, exit_stack
 
-  tools, exit_stack = await MCPToolset.from_server(
-      connection_params=SseServerParams(url="http://0.0.0.0:5000/sse",
-                                        headers={"Content-Type": "application/json"})
-  )
-  print("MCP Toolset created successfully.")
-  return tools, exit_stack
 
-# --- Step 2: Agent Definition ---
 async def get_agent_async():
-  """Creates an ADK Agent equipped with tools from the MCP Server."""
-  tools, exit_stack = await get_tools_async()
-  print(f"Fetched {len(tools)} tools from MCP server.")
-  root_agent = LlmAgent(
-      model='gemini-2.0-flash', # Adjust if needed
-      name='maps_assistant',
-      instruction='Help user with mapping and directions using available tools.',
-      tools=tools,
-  )
-  return root_agent, exit_stack
+    """Creates an ADK Agent equipped with tools from the MCP Server."""
+    tools, exit_stack = await get_tools_async()
+    print(f"Fetched {len(tools)} tools from MCP server.")
+    root_agent = LlmAgent(
+        model='gemini-2.0-flash',  # Adjust if needed
+        name='maps_assistant',
+        instruction='Help user with mapping and directions using available tools.',
+        tools=tools,
+    )
+    return root_agent, exit_stack
+
 
 # --- Step 3: Main Execution Logic (modify query) ---
-async def async_main():
-  session_service = InMemorySessionService()
-  # artifacts_service = InMemoryArtifactService() # Optional
+async def async_main(query):
 
-  session = session_service.create_session(
-      state={}, app_name='mcp_maps_app', user_id='user_maps'
-  )
+    try:
+        root_agent, exit_stack = await get_agent_async()
+    except* Exception as eg:
+        for e in eg.exceptions:
+            print(f"Sub-exception occurred: {type(e).__name__}: {e}")
 
+    runner = Runner(
+        app_name='mcp_maps_app',
+        agent=root_agent,
+        session_service=session_service,
+        memory_service=memory_service
+    )
 
+    content = types.Content(role='user', parts=[types.Part(text=query)])
 
-  try:
-    root_agent, exit_stack = await get_agent_async()
-  except* Exception as eg:
-      for e in eg.exceptions:
-          print(f"Sub-exception occurred: {type(e).__name__}: {e}")
+    print(session.id)
+    events_async = runner.run_async(
+        session_id=session.id, user_id=session.user_id, new_message=content
+    )
+    print("Closing MCP server connection...")
+    await exit_stack.aclose()
+    async for event in events_async:
+        if event.is_final_response():
+            return event.content.parts[0].text
 
-  runner = Runner(
-      app_name='mcp_maps_app',
-      agent=root_agent,
-      # artifact_service=artifacts_service, # Optional
-      session_service=session_service,
-  )
-  while True:
-
-      query = input("User Query:")
-      content = types.Content(role='user', parts=[types.Part(text=query)])
-
-      print("Running agent...")
-      events_async = runner.run_async(
-          session_id=session.id, user_id=session.user_id, new_message=content
-      )
-
-      async for event in events_async:
-        print(f"Event received: {event.content.parts[0].text}")
-
-      print("Closing MCP server connection...")
-      await exit_stack.aclose()
-      print("Cleanup complete.")
 
 if __name__ == '__main__':
-  try:
-    asyncio.run(async_main())
-  except Exception as e:
-      print(f"An error occurred: {e}")
+    try:
+        query = input("User Query:")
+        asyncio.run(async_main(query))
+    except Exception as e:
+        print(f"An error occurred: {e}")

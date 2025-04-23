@@ -16,6 +16,7 @@ services:
     container_name: mcp_sever
     ports:
       - "5000:8000"
+      - "8501:8501"
     volumes:
       - ./mcp:/app
-    command: python sever.py
+    command: bash -c "python sever.py & streamlit run DocumentManager.py && wait"
