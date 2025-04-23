@@ -41,9 +41,7 @@ async def async_main():
       state={}, app_name='mcp_maps_app', user_id='user_maps'
   )
 
-  query = "hello"
-  print(f"User Query: '{query}'")
-  content = types.Content(role='user', parts=[types.Part(text=query)])
+
 
   try:
     root_agent, exit_stack = await get_agent_async()
@@ -57,18 +55,22 @@ async def async_main():
       # artifact_service=artifacts_service, # Optional
       session_service=session_service,
   )
+  while True:
 
-  print("Running agent...")
-  events_async = runner.run_async(
-      session_id=session.id, user_id=session.user_id, new_message=content
-  )
+      query = input("User Query:")
+      content = types.Content(role='user', parts=[types.Part(text=query)])
 
-  async for event in events_async:
-    print(f"Event received: {event}")
+      print("Running agent...")
+      events_async = runner.run_async(
+          session_id=session.id, user_id=session.user_id, new_message=content
+      )
 
-  print("Closing MCP server connection...")
-  await exit_stack.aclose()
-  print("Cleanup complete.")
+      async for event in events_async:
+        print(f"Event received: {event.content.parts[0].text}")
+
+      print("Closing MCP server connection...")
+      await exit_stack.aclose()
+      print("Cleanup complete.")
 
 if __name__ == '__main__':
   try:
