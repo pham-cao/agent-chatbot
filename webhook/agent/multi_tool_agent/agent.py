@@ -3,15 +3,20 @@ from dotenv import load_dotenv
 from google.genai import types
 from google.adk.agents.llm_agent import LlmAgent
 from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
+from google.adk.sessions import InMemorySessionService, DatabaseSessionService
 from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, SseServerParams
 from google.adk.memory import InMemoryMemoryService
 
+APP_NAME = "Student Guide"
+SESSION_ID = "30041975"
+
+# Example using a local SQLite file:
+db_url = "sqlite:///./session.db"
+session_service = DatabaseSessionService(db_url=db_url)
+
+x = session_service.get_session(app_name='mcp_maps_app', user_id='7816816', session_id="hello")
+
 load_dotenv()
-session_service = InMemorySessionService()
-session = session_service.create_session(
-    state={}, app_name='mcp_maps_app', user_id='7322592037816816'
-)
 memory_service = InMemoryMemoryService()
 
 
@@ -38,8 +43,7 @@ async def get_agent_async():
 
 
 # --- Step 3: Main Execution Logic (modify query) ---
-async def async_main(query):
-
+async def async_main(query, user_id):
     try:
         root_agent, exit_stack = await get_agent_async()
     except* Exception as eg:
@@ -47,7 +51,7 @@ async def async_main(query):
             print(f"Sub-exception occurred: {type(e).__name__}: {e}")
 
     runner = Runner(
-        app_name='mcp_maps_app',
+        app_name=APP_NAME,
         agent=root_agent,
         session_service=session_service,
         memory_service=memory_service
@@ -55,7 +59,15 @@ async def async_main(query):
 
     content = types.Content(role='user', parts=[types.Part(text=query)])
 
-    print(session.id)
+    session = session_service.get_session(app_name=APP_NAME,
+                                          user_id=user_id,
+                                          session_id=SESSION_ID)
+
+    if not session:
+        session = session_service.create_session(app_name=APP_NAME,
+                                                 user_id=user_id,
+                                                 session_id=SESSION_ID)
+
     events_async = runner.run_async(
         session_id=session.id, user_id=session.user_id, new_message=content
     )

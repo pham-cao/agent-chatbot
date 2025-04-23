@@ -40,8 +40,7 @@ async def webhook():
             if "message" in event:
                 text = event["message"].get("text")
                 if text:
-                    reply = f"Bạn vừa nói: {text}"
-                    reply = await async_main(text)
+                    reply = await async_main(text,sender_id)
                     print(reply)
                     send_message(sender_id, reply)
 
